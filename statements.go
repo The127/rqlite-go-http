@@ -1,6 +1,7 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 )
@@ -61,13 +62,17 @@ func (s SQLStatement) MarshalJSON() ([]byte, error) {
 // always appear as an array in the format rqlite expects.
 func (s *SQLStatement) UnmarshalJSON(data []byte) error {
 	var sql string
-	if err := json.Unmarshal(data, &sql); err == nil {
+	sqlDec := json.NewDecoder(bytes.NewReader(data))
+	sqlDec.UseNumber()
+	if err := sqlDec.Decode(&sql); err == nil {
 		s.SQL = sql
 		return nil
 	}
 
 	var arr []any
-	if err := json.Unmarshal(data, &arr); err != nil {
+	arrDec := json.NewDecoder(bytes.NewReader(data))
+	arrDec.UseNumber()
+	if err := arrDec.Decode(&arr); err != nil {
 		return err
 	}
 
@@ -114,7 +119,9 @@ func (sts SQLStatements) MarshalJSON() ([]byte, error) {
 
 func (sts *SQLStatements) UnmarshalJSON(data []byte) error {
 	var stmts []*SQLStatement
-	if err := json.Unmarshal(data, &stmts); err != nil {
+	stmtsDec := json.NewDecoder(bytes.NewReader(data))
+	stmtsDec.UseNumber()
+	if err := stmtsDec.Decode(&stmts); err != nil {
 		return err
 	}
 	*sts = stmts
